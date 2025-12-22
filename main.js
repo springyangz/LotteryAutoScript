@@ -34,6 +34,12 @@ let ck_flag = 0;
  * @returns {Promise<string>} 错误信息
  */
 async function main() {
+    // 在main函数开始处记录开始时间  
+    const startTime = Date.now(); 
+    // 在这里添加配置导入  
+    const config = require('./lib/data/config'); 
+    const { sendNotify } = require('./lib/helper/notify');
+
     const { COOKIE, NUMBER, CLEAR, ENABLE_MULTIPLE_ACCOUNT, MULTIPLE_ACCOUNT_PARM } = process.env;
     if (ENABLE_MULTIPLE_ACCOUNT) {
         let muti_acco = multiple_account.length
@@ -96,6 +102,33 @@ async function main() {
                 save_lottery_info_to_file
             } = require('./lib/data/config');
             ck_flag = 1;
+
+            // 在switch语句的每个case结束前添加通知发送逻辑  
+            const sendCompletionNotification = async (mode, accountNum) => {  
+                if (config.send_completion_notification && ['start', 'clear', 'check'].includes(mode)) {  
+                    const endTime = Date.now();  
+                    const runTime = endTime - startTime;  
+                    const hours = Math.floor(runTime / 3600000);  
+                    const minutes = Math.floor((runTime % 3600000) / 60000);  
+                    const seconds = Math.floor((runTime % 60000) / 1000);  
+
+                    let accountNames = `账号${accountNum}`;  
+                    if (process.env.NOTE) {  
+                        accountNames = process.env.NOTE;  
+                    }  
+
+                    const modeText = {  
+                        'start': '抽奖',  
+                        'clear': '清理',  
+                        'check': '中奖检测'  
+                    }[mode];  
+
+                    const message = `${modeText}任务完成\n账户: ${accountNames}\n运行时间: ${hours}时${minutes}分${seconds}秒`;  
+
+                    await sendNotify(`${modeText}任务完成`, message);  
+                }  
+            };  
+
             switch (mode) {
                 case 'start':
                     log.info('抽奖', '开始运行');
@@ -104,11 +137,13 @@ async function main() {
                         await clearLotteryInfo();
                     }
                     await start(NUMBER);
+                    await sendCompletionNotification('start', NUMBER); 
                     break;
                 case 'check':
                     log.info('中奖检测', '检查是否中奖');
                     loop_wait = check_loop_wait;
                     await isMe(NUMBER);
+                    await sendCompletionNotification('check', NUMBER); 
                     break;
                 case 'clear':
                     if (CLEAR) {
@@ -116,6 +151,7 @@ async function main() {
                         loop_wait = clear_loop_wait;
                         await clear();
                     }
+                    await sendCompletionNotification('clear', NUMBER); 
                     break;
                 case 'login':
                     log.info('登录状态', '正常，跳过扫码');

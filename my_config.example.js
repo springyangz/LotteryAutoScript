@@ -454,6 +454,13 @@ module.exports = Object.freeze({
          */
         clear_remove_delay: 8000,
 
+        /**  
+         * 是否发送程序运行完成通知  
+         * - true: 在程序运行结束前发送通知，包含运行功能、账户名称、运行时间  
+         * - false: 不发送通知  
+         */  
+        send_completion_notification: false,
+
         /**
          * 清除动态类型
          * 
