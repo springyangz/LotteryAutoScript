@@ -30,17 +30,55 @@ let loop_wait = 0;
 // eslint-disable-next-line no-unused-vars
 let ck_flag = 0;
 
+let GLOBAL_ENABLE_MULTIPLE_ACCOUNT = null;  
+
+// 多账户统一通知函数  
+const sendMultiAccountNotification = async (accountResults, totalStartTime) => {  
+    const config = require('./lib/data/config');
+    const { sendNotify } = require('./lib/helper/notify');  
+    const mode = process.env.lottery_mode;  
+      
+    if (config.send_completion_notification && ['start', 'clear', 'check'].includes(mode)) {  
+        const totalEndTime = Date.now();  
+        const totalRunTime = totalEndTime - totalStartTime;  
+        const hours = Math.floor(totalRunTime / 3600000);  
+        const minutes = Math.floor((totalRunTime % 3600000) / 60000);  
+        const seconds = Math.floor((totalRunTime % 60000) / 1000);  
+          
+        const modeText = {  
+            'start': '抽奖',  
+            'clear': '清理',  
+            'check': '中奖检测'  
+        }[mode];  
+          
+        // 构建账户信息  
+        const successAccounts = accountResults.filter(r => r.success).map(r => r.accountName);  
+        const failedAccounts = accountResults.filter(r => !r.success);  
+          
+        let message = `${modeText}任务完成\n`;  
+        message += `成功账户: ${successAccounts.join(', ')}\n`;  
+        message += `总运行时间: ${hours}时${minutes}分${seconds}秒`;  
+          
+        if (failedAccounts.length > 0) {  
+            message += `\n失败账户: ${failedAccounts.map(r => `${r.accountName}(${r.error})`).join(', ')}`;  
+        }  
+          
+        await sendNotify(`${modeText}任务完成 - 多账户`, message);  
+    }  
+};
+
 /**
  * @returns {Promise<string>} 错误信息
  */
 async function main() {
-    // 在main函数开始处记录开始时间  
-    const startTime = Date.now(); 
-    // 在这里添加配置导入  
-    const config = require('./lib/data/config'); 
-    const { sendNotify } = require('./lib/helper/notify');
-
     const { COOKIE, NUMBER, CLEAR, ENABLE_MULTIPLE_ACCOUNT, MULTIPLE_ACCOUNT_PARM } = process.env;
+
+    // 首次进入main时，缓存原始值（仅执行一次）
+    if (GLOBAL_ENABLE_MULTIPLE_ACCOUNT === null) {
+        GLOBAL_ENABLE_MULTIPLE_ACCOUNT = ENABLE_MULTIPLE_ACCOUNT;
+        // log.info('缓存多账户原始开关值', GLOBAL_ENABLE_MULTIPLE_ACCOUNT); // 可选：验证缓存值
+    }
+    
     if (ENABLE_MULTIPLE_ACCOUNT) {
         let muti_acco = multiple_account.length
             ? multiple_account
@@ -49,7 +87,14 @@ async function main() {
         process.env.ENABLE_MULTIPLE_ACCOUNT = '';
         let localhost = request.globalAgent;
 
+        // 记录总开始时间  
+        const totalStartTime = Date.now();  
+        // 收集所有账户的运行结果  
+        const accountResults = [];
+
         for (const acco of muti_acco) {
+            const accountStartTime = Date.now(); 
+
             process.env.COOKIE = acco.COOKIE;
             process.env.NUMBER = acco.NUMBER;
             process.env.CLEAR = acco.CLEAR;
@@ -69,6 +114,16 @@ async function main() {
                 request.globalAgent = localhost;
             }
             const err_msg = await main();
+
+            const accountEndTime = Date.now();               
+            // 收集账户信息  
+            accountResults.push({  
+                accountName: acco.NOTE || `账号${acco.NUMBER}`,  
+                success: !err_msg,  
+                error: err_msg,  
+                runTime: accountEndTime - accountStartTime  
+            });  
+
             if (err_msg) {
                 return err_msg;
             } else {
@@ -80,6 +135,10 @@ async function main() {
             }
             request.globalAgent = localhost;
         }
+
+        // 所有账户运行完成后，统一发送通知  
+        await sendMultiAccountNotification(accountResults, totalStartTime); 
+
         /**多账号状态还原 */
         process.env.ENABLE_MULTIPLE_ACCOUNT = ENABLE_MULTIPLE_ACCOUNT;
     } else if (COOKIE) {
@@ -91,6 +150,11 @@ async function main() {
 
         log.info('main', '当前为第' + NUMBER + '个账号');
         log._cache.length = 0;
+        // 在main函数开始处记录开始时间  
+        const startTime = Date.now();
+        // 在这里添加配置导入  
+        const config = require('./lib/data/config'); 
+        const { sendNotify } = require('./lib/helper/notify');
 
         const mode = process.env.lottery_mode;
         const help_msg = '用法: lottery [OPTIONS]\n\nOPTIONS:\n\tstart  启动抽奖\n\tcheck  中奖检查\n\tacount 查看帐号信息\n\tclear  清理动态和关注\n\tlogin 扫码登录更新CK\n\tupdate 检查更新\n\thelp   帮助信息';
@@ -105,6 +169,7 @@ async function main() {
 
             // 在switch语句的每个case结束前添加通知发送逻辑  
             const sendCompletionNotification = async (mode, accountNum) => {  
+                const config = require('./lib/data/config');
                 if (config.send_completion_notification && ['start', 'clear', 'check'].includes(mode)) {  
                     const endTime = Date.now();  
                     const runTime = endTime - startTime;  
@@ -125,7 +190,7 @@ async function main() {
 
                     const message = `${modeText}任务完成\n账户: ${accountNames}\n运行时间: ${hours}时${minutes}分${seconds}秒`;  
 
-                    await sendNotify(`${modeText}任务完成`, message);  
+                    //await sendNotify(`${modeText}任务完成`, message);  
                 }  
             };  
 
@@ -137,13 +202,19 @@ async function main() {
                         await clearLotteryInfo();
                     }
                     await start(NUMBER);
-                    await sendCompletionNotification('start', NUMBER); 
+                    if (!GLOBAL_ENABLE_MULTIPLE_ACCOUNT) {
+                        await sendCompletionNotification('start', NUMBER); 
+                    }
+                   
                     break;
                 case 'check':
                     log.info('中奖检测', '检查是否中奖');
                     loop_wait = check_loop_wait;
                     await isMe(NUMBER);
-                    await sendCompletionNotification('check', NUMBER); 
+                    if (!GLOBAL_ENABLE_MULTIPLE_ACCOUNT) {
+                        await sendCompletionNotification('check', NUMBER); 
+                    }
+                    
                     break;
                 case 'clear':
                     if (CLEAR) {
@@ -151,7 +222,10 @@ async function main() {
                         loop_wait = clear_loop_wait;
                         await clear();
                     }
-                    await sendCompletionNotification('clear', NUMBER); 
+                    if (!GLOBAL_ENABLE_MULTIPLE_ACCOUNT) {
+                        await sendCompletionNotification('clear', NUMBER);
+                    }
+
                     break;
                 case 'login':
                     log.info('登录状态', '正常，跳过扫码');
