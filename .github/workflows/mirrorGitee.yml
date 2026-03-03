@@ -1,0 +1,48 @@
+name: Sync to Gitee
+
+# 触发条件：push 到 main 分支时触发
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    # 增加失败通知（可选）
+    if: github.repository_owner != 'github-actions[bot]'
+    steps:
+      # 1. 检出 GitHub 仓库代码（拉取所有历史）
+      - name: Checkout GitHub repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2. 配置 Git 身份
+      - name: Configure Git
+        run: |
+          git config --global user.name "${{ github.actor }}"  # 使用触发 Action 的 GitHub 用户名
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"  # 官方匿名邮箱
+
+      # 3. 同步代码到 Gitee（优化逻辑）
+      - name: Sync to Gitee
+        env:
+          GITEE_USERNAME: springyangz  # 替换为实际用户名
+          GITEE_REPO_NAME: lottery-auto-script  # 替换为实际仓库名
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+        run: |
+          # 先检查 gitee 远程仓库是否已存在，存在则更新地址，不存在则添加
+          if git remote | grep -q "gitee"; then
+            git remote set-url gitee https://${GITEE_USERNAME}:${GITEE_TOKEN}@gitee.com/${GITEE_USERNAME}/${GITEE_REPO_NAME}.git
+          else
+            git remote add gitee https://${GITEE_USERNAME}:${GITEE_TOKEN}@gitee.com/${GITEE_USERNAME}/${GITEE_REPO_NAME}.git
+          fi
+
+          # 获取当前推送的分支名（自动适配，无需硬编码）
+          SOURCE_BRANCH=${GITHUB_REF#refs/heads/}
+          # 推送当前分支到 Gitee 同名分支（去掉 --force，仅首次同步可临时加）
+          git push gitee "${SOURCE_BRANCH}:${SOURCE_BRANCH}" --force
+
+          # 推送所有标签（可选，确保标签也同步）
+          git push gitee --tags
