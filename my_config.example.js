@@ -13,12 +13,18 @@ module.exports = Object.freeze({
         /**
          * 监视的tag
          */
-        TAGs: [],
+        TAGs: [
+            '互动抽奖',
+            '转发抽奖',
+            '动态抽奖',
+            '抽奖',
+            "抽奖号的日常",
+        ],
 
         /**
          * 监视的专栏关键词
          */
-        Articles: [],
+        Articles: [ '抽奖合集'],
 
         /**
          * @typedef {object} LotteryInfo
@@ -204,55 +210,55 @@ module.exports = Object.freeze({
          * - 单位毫秒
          * - 上下浮动50%
          */
-        wait: 30 * 1000,
+        wait: 120 * 1000,
 
         /**
          * - 检索动态间隔
          * - 单位毫秒
          */
-        search_wait: 2000,
+        search_wait: 10000,
 
         /**
          * - 读取下一页私信间隔
          * - 单位毫秒
          */
-        get_session_wait: 3000,
+        get_session_wait: 10000,
 
         /**
          * - 已读私信间隔
          * - 单位毫秒
          */
-        update_session_wait: 1000,
+        update_session_wait: 10000,
 
         /**
          * - 读取下一页关注列表间隔
          * - 单位毫秒
          */
-        get_partition_wait: 2000,
+        get_partition_wait: 10000,
 
         /**
          * - 获取动态细节间隔
          * - 单位毫秒
          */
-        get_dynamic_detail_wait: 2000,
+        get_dynamic_detail_wait: 10000,
 
         /**
          * - 过滤间隔(开奖时间/粉丝数)
          * - 单位毫秒
          */
-        filter_wait: 1000,
+        filter_wait: 10000,
 
         /**
          * - 随机动态间隔
          * - 单位毫秒
          */
-        random_dynamic_wait: 2000,
+        random_dynamic_wait: 10000,
 
         /**
          * - 预约抽奖间隔
          * - 单位毫秒
          */
-        reserve_lottery_wait: 6000,
+        reserve_lottery_wait: 10000,
 
         /**
          * - up主粉丝数限制
@@ -267,7 +273,7 @@ module.exports = Object.freeze({
         /**
          * - 是否发送随机动态(防止被开奖机过滤)
          */
-        create_dy: false,
+        create_dy: true,
 
         /**
          * 随机动态类型
@@ -280,7 +286,7 @@ module.exports = Object.freeze({
         /**
          * - 结束运行时发送随机动态的数量
          */
-        create_dy_num: 1,
+        create_dy_num: 2,
 
         /**
          * - 随机动态内容
@@ -291,18 +297,44 @@ module.exports = Object.freeze({
          * @property {number} img_height
          * @param { string | Picture[] } content
          */
-        dy_contents: ['[doge]', '[doge][doge]'],
+        dy_contents: [
+            '[doge]',
+            '[doge][doge]',
+            "开心最重要",
+            "听一声剑鸣，道一声莫忘",
+            "欧皇附体",
+            "非酋体质",
+            "What do you want from me",
+            "I won't let you done",
+            "Please don't give in",
+            "人生得意须尽欢，莫使金杯空对月",
+            "练得身形似鹤形，千株松下两函经。我来问道无余说，云在青天水在瓶",
+            "沧浪之水清兮可以濯我缨，沧浪之水浊兮可以濯我足",
+            "对饮成三人",
+            "保佑中中中",
+            "一袋米抗几楼",
+            "天可补，海可填，南山可移。日月既往，不可复追",
+            "山不让尘，川不辞盈",
+            "当我们真正热爱这世界时，我们才真正生活在这世上",
+            "幸福比傲慢更容易蒙住人的眼睛",
+            "月缺不改光，剑折不改刚",
+            "Always remember that you are absolutely unique. Just like everyone else.",
+            "Challenges are what make life interesting and overcoming them is what makes life meaningful.",
+            "Education is not the filling of a pail but the lighting of a fire. — William Butler Yeats",
+            "Genius only means hard-working all one’s life",
+            " I am a slow walker, but I never walk backwards."
+        ],
 
         /**
          * - 每转发x条抽奖动态就发送x条随机动态
          * - @example [[10,11,9],[6,8,9]] 每转发9,10,11条抽奖动态就发送6,8,9条随机动态
          */
-        create_dy_mode: [[0], [0]],
+        create_dy_mode: [[5,6,4],[3,4,5]],
 
         /**
          * 转发时[at]的用户
          */
-        at_users: [['转发抽奖娘', 294887687], ['你的工具人老公', 100680137]],
+        at_users: [['ASpringYoung', 3546733975964227]],
 
         /**
          * - 动态dyid或UID
@@ -452,7 +484,7 @@ module.exports = Object.freeze({
         /**
          * 清除延时(毫秒)
          */
-        clear_remove_delay: 8000,
+        clear_remove_delay: 10000,
 
         /**  
          * 是否发送程序运行完成通知  
@@ -481,7 +513,7 @@ module.exports = Object.freeze({
          * 1
          * [1,2,4]
          */
-        clear_dynamic_type: [1],
+        clear_dynamic_type: [1, 2, 4],
     },
 
     /**
