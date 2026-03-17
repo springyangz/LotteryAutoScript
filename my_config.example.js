@@ -8,7 +8,10 @@ module.exports = Object.freeze({
         /**
          * 监视更转的用户uid
          */
-        UIDs: [],
+        UIDs: [
+            294887687,  // 转发抽奖娘  
+            100680137   // 你的抽奖工具人  
+        ],
 
         /**
          * 监视的tag
@@ -19,12 +22,24 @@ module.exports = Object.freeze({
             '动态抽奖',
             '抽奖',
             "抽奖号的日常",
+            '关注抽奖',  
+            '评论抽奖',  
+            '点赞抽奖',  
+            '三连抽奖',  
+            '福利',  
+            '粉丝福利'
         ],
 
         /**
          * 监视的专栏关键词
          */
-        Articles: [ '抽奖合集'],
+        Articles: [
+            '抽奖合集',  
+            '福利活动',  
+            '抽奖汇总',  
+            '每日抽奖',  
+            '抽奖信息'
+        ],
 
         /**
          * @typedef {object} LotteryInfo
@@ -74,7 +89,7 @@ module.exports = Object.freeze({
          * [3,2,1,0]
          * [1,2,1,2,1]
          */
-        LotteryOrder: [2, 0, 1, 3],
+        LotteryOrder: [1, 2, 0, 3, 4],
 
         /**
          * 保存抽奖信息至文件
@@ -168,17 +183,17 @@ module.exports = Object.freeze({
         /**
          * - 在uid里检索的页数
          */
-        uid_scan_page: 3,
+        uid_scan_page: 5,
 
         /**
          * - 在tag里检索的页数
          */
-        tag_scan_page: 3,
+        tag_scan_page: 5,
 
         /**
          * - 获取专栏数量
          */
-        article_scan_page: 3,
+        article_scan_page: 5,
 
         /**
          * - 专栏创建时间距离现在的最大天数
