@@ -66,7 +66,7 @@ module.exports = Object.freeze({
      */
     multiple_account_parm: [
         {
-            COOKIE: 'SCT254268TquTXWVByKKTRr9rpZFTeHp8I',
+            COOKIE: '',
             NOTE: '',
             NUMBER: 1,
             CLEAR: true,
@@ -83,7 +83,7 @@ module.exports = Object.freeze({
      * 推送相关参数
      */
     push_parm: {
-        SCKEY: '',
+        SCKEY: 'SCT254268TquTXWVByKKTRr9rpZFTeHp8I',
         SENDKEY: '',
         QQ_SKEY: '',
         QQ_MODE: '',
