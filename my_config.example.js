@@ -507,8 +507,8 @@ module.exports = Object.freeze({
          * - false: 不发送通知  
          */  
         send_check_completion_notification: false,
-        send_start_completion_notification: false,
-        send_clear_completion_notification: false,
+        send_start_completion_notification: true,
+        send_clear_completion_notification: true,
 
         /**
          * 清除动态类型

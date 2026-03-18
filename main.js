@@ -172,7 +172,7 @@ async function main() {
             ck_flag = 1;
 
             // 在switch语句的每个case结束前添加通知发送逻辑  
-            const sendCompletionNotification = async (mode, accountNum) => {  
+            const sendCompletionNotification = async (mode, accountNum, dynamicNum) => {  
                 const config = require('./lib/data/config');
                 const notificationConfigMap = {
                     start: config.send_start_completion_notification,
@@ -196,9 +196,15 @@ async function main() {
                         'start': '抽奖',  
                         'clear': '清理',  
                         'check': '中奖检测'  
-                    }[mode];  
+                    }[mode];
+                    
+                    const optModeText = {  
+                        'start': '新增',  
+                        'clear': '删除',  
+                        'check': '变化'  
+                    }[mode];
 
-                    const message = `\n${modeText}任务完成\n账户: ${accountNames}\n运行时间: ${hours}时${minutes}分${seconds}秒`;  
+                    const message = `\n${modeText}任务完成\n账户: ${accountNames}\n运行时间: ${hours}时${minutes}分${seconds}秒 \n${optModeText}动态数目: ${dynamicNum}`;  
                     log.info(`${modeText}任务完成`, message);
 
                     await sendNotify(`${modeText}任务完成`, message);  
@@ -212,9 +218,9 @@ async function main() {
                     if (save_lottery_info_to_file) {
                         await clearLotteryInfo();
                     }
-                    await start(NUMBER);
+                    const startResult = await start(NUMBER);
                     if (!GLOBAL_ENABLE_MULTIPLE_ACCOUNT) {
-                        await sendCompletionNotification('start', NUMBER); 
+                        await sendCompletionNotification('start', NUMBER, startResult); 
                     }
                    
                     break;
@@ -223,7 +229,7 @@ async function main() {
                     loop_wait = check_loop_wait;
                     await isMe(NUMBER);
                     if (!GLOBAL_ENABLE_MULTIPLE_ACCOUNT) {
-                        await sendCompletionNotification('check', NUMBER); 
+                        await sendCompletionNotification('check', NUMBER, 0); 
                     }
                     
                     break;
@@ -231,10 +237,10 @@ async function main() {
                     if (CLEAR) {
                         log.info('清理动态', '开始运行');
                         loop_wait = clear_loop_wait;
-                        await clear();
-                    }
-                    if (!GLOBAL_ENABLE_MULTIPLE_ACCOUNT) {
-                        await sendCompletionNotification('clear', NUMBER);
+                        const deletedCount = await clear();
+                        if (!GLOBAL_ENABLE_MULTIPLE_ACCOUNT) {
+                            await sendCompletionNotification('clear', NUMBER, deletedCount);
+                        }
                     }
 
                     break;
