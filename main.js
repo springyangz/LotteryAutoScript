@@ -209,7 +209,12 @@ async function main() {
 
                     await sendNotify(`${modeText}任务完成`, message);  
                 }  
-            };  
+            };
+            
+            // 获取开始时的动态数量
+            const bili = require('./lib/net/bili');
+            const startStat = await bili.getStat();  
+            const startDynamicCount = startStat?.dynamic_count || 0;  
 
             switch (mode) {
                 case 'start':
@@ -218,29 +223,19 @@ async function main() {
                     if (save_lottery_info_to_file) {
                         await clearLotteryInfo();
                     }
-                    const startResult = await start(NUMBER);
-                    if (!GLOBAL_ENABLE_MULTIPLE_ACCOUNT) {
-                        await sendCompletionNotification('start', NUMBER, startResult); 
-                    }
-                   
+
+                    await start(NUMBER);                                     
                     break;
                 case 'check':
                     log.info('中奖检测', '检查是否中奖');
                     loop_wait = check_loop_wait;
-                    await isMe(NUMBER);
-                    if (!GLOBAL_ENABLE_MULTIPLE_ACCOUNT) {
-                        await sendCompletionNotification('check', NUMBER, 0); 
-                    }
-                    
+                    await isMe(NUMBER);                   
                     break;
                 case 'clear':
                     if (CLEAR) {
                         log.info('清理动态', '开始运行');
                         loop_wait = clear_loop_wait;
-                        const deletedCount = await clear();
-                        if (!GLOBAL_ENABLE_MULTIPLE_ACCOUNT) {
-                            await sendCompletionNotification('clear', NUMBER, deletedCount);
-                        }
+                        await clear();
                     }
 
                     break;
@@ -257,6 +252,13 @@ async function main() {
                     return '未提供以下参数\n\t[OPTIONS]\n\n' + help_msg;
                 default:
                     return `提供了错误的[OPTIONS] -> ${mode}\n\n` + help_msg;
+            }
+
+            // 获取结束时的动态数量  
+            const endStat = await bili.getStat();  
+            const endDynamicCount = endStat?.dynamic_count || 0; 
+            if (!GLOBAL_ENABLE_MULTIPLE_ACCOUNT) {
+                await sendCompletionNotification(mode, NUMBER, endDynamicCount - startDynamicCount); 
             }
         } else {
             log.error('Cookie已失效', '切换账号时不要点击退出账号而应直接删除Cookie退出');
